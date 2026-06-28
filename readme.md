@@ -4,6 +4,8 @@
 </h1>
 <h4>Enterprise-grade Discord ticketing that just works (and looks good!)</h4>
 
+[![CI](https://github.com/liiaamm/optidesk/actions/workflows/ci.yml/badge.svg)](https://github.com/liiaamm/optidesk/actions/workflows/ci.yml)
+
 **[Introduction](#introduction)** · **[Architecture](#architecture)** · **[Installation](#installation)** · **[Guild Configuration](#guild-configuration)** · **[License & Contributions](#license--contributions)**
 
 ----
