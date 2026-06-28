@@ -69,16 +69,38 @@ async function main() {
     const hostedEnforcementEnabled = await askQuestion('Enable hosted enforcement (global ban-lists)?', { type: 'boolean', defaultValue: false });
     const rateLimitEnabled = await askQuestion('Enable user rate limiting?', { type: 'boolean', defaultValue: true });
 
-    const dbTypeInput = await askQuestion('Database Type (local/aws)', { defaultValue: 'local' });
-    const dbType = dbTypeInput.toLowerCase() === 'aws' ? 'dynamodb-aws' : 'dynamodb-local';
-
+    console.log('\n--- Database Configuration ---');
+    console.log('OptiDesk supports multiple database engines:');
+    console.log('  1. sqlite   - (Recommended) Zero-config local database, extremely fast and reliable.');
+    console.log('  2. postgres - Global/Production distributed PostgreSQL database.');
+    console.log('  3. local    - Legacy DynamoDB local deployment.');
+    console.log('  4. aws      - Legacy DynamoDB AWS deployment.');
+    const dbTypeInput = await askQuestion('Database Engine (sqlite/postgres/local/aws)', { defaultValue: 'sqlite' });
+    
+    let dbType = 'sqlite';
+    let sqlitePath = undefined;
+    let postgresUrl = undefined;
     let persistPath = undefined;
     let dbRegion = undefined;
     let awsCredentials = null;
 
-    if (dbType === 'dynamodb-local') {
-        persistPath = await askQuestion('DynamoDB Local persistence directory path', { defaultValue: './data/dynamo' });
-    } else {
+    const inputLower = dbTypeInput.toLowerCase();
+    if (inputLower === 'postgres' || inputLower === 'postgresql') {
+        dbType = 'postgresql';
+        postgresUrl = await askQuestion('PostgreSQL Connection URL (e.g. postgresql://user:pass@localhost:5432/optidesk)', { required: true });
+        
+        console.log('Testing PostgreSQL connection...');
+        try {
+            const { Pool } = require('pg');
+            const pool = new Pool({ connectionString: postgresUrl });
+            await pool.query('SELECT 1');
+            await pool.end();
+            console.log('✅ PostgreSQL connection successful.');
+        } catch (err) {
+            console.log('⚠️ Warning: Failed to connect to PostgreSQL. Please verify your credentials later.', err.message);
+        }
+    } else if (inputLower === 'aws') {
+        dbType = 'dynamodb-aws';
         dbRegion = await askQuestion('AWS Region for DynamoDB', { defaultValue: 'ap-southeast-4' });
         const configureAwsCreds = await askQuestion('Would you like to configure AWS Credentials in the script setup?', { type: 'boolean', defaultValue: false });
         if (configureAwsCreds) {
@@ -86,6 +108,12 @@ async function main() {
             const secretAccessKey = await askQuestion('AWS Secret Access Key', { required: true });
             awsCredentials = { accessKeyId, secretAccessKey };
         }
+    } else if (inputLower === 'local' || inputLower === 'dynamodb-local') {
+        dbType = 'dynamodb-local';
+        persistPath = await askQuestion('DynamoDB Local persistence directory path', { defaultValue: './data/dynamo' });
+    } else {
+        dbType = 'sqlite';
+        sqlitePath = await askQuestion('SQLite Database file path', { defaultValue: './data/optidesk.db' });
     }
 
     const storageTypeInput = await askQuestion('Transcript storage type (disabled/s3)', { defaultValue: 'disabled' });
@@ -116,6 +144,8 @@ async function main() {
         rateLimitEnabled,
         database: {
             type: dbType,
+            ...(sqlitePath ? { sqlitePath } : {}),
+            ...(postgresUrl ? { postgresUrl } : {}),
             ...(persistPath ? { persistPath } : {}),
             ...(dbRegion ? { region: dbRegion } : {})
         },
