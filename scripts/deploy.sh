@@ -26,7 +26,7 @@ if [ "$IS_IN_REPO" = false ]; then
     fi
     
     if [ ! -d "optidesk" ]; then
-        git clone https://github.com/liiaamm/optidesk.git optidesk
+        git clone https://github.com/atriasfty/optidesk.git optidesk
     fi
     
     cd optidesk

@@ -34,7 +34,7 @@ You should have received a copy of the AGPL-3.0 license and a link to the source
 		const repositoryB = new ButtonBuilder()
 			.setLabel('Source Code')
 			.setStyle(ButtonStyle.Link)
-			.setURL('https://github.com/liiaamm/optidesk') // If you have made changes, under the AGPL you MUST make them open-source & under the AGPL. Add a link to your source code here.
+			.setURL('https://github.com/atriasfty/optidesk') // If you have made changes, under the AGPL you MUST make them open-source & under the AGPL. Add a link to your source code here.
 
 		const row = new ActionRowBuilder()
 			.setComponents([licenseB, repositoryB])
